@@ -19,7 +19,7 @@ import sys
 import os
 
 
-__version__ = '0.3.2'
+__version__ = '0.3.5'
 __description__ = 'Django support for MongoDB via MongoEngine'
 __license__ = 'BSD'
 __author__ = 'Ross Lawley'
@@ -49,7 +49,7 @@ setup(
     packages=find_packages(exclude=('doc', 'docs',)),
     include_package_data=True,
     # use python setup.py nosetests to test
-    setup_requires=['nose', 'coverage'],
+    setup_requires=[],
     classifiers=[
         'Development Status :: 4 - Beta',
         'Environment :: Web Environment',

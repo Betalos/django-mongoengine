@@ -2,14 +2,13 @@ from django.core.exceptions import ImproperlyConfigured
 from django.views.generic.base import View
 from django.views.generic.base import TemplateResponseMixin
 from django.views.generic import detail as djmod
-from django.utils import six
 
 from django_mongoengine.utils.wrappers import (
     WrapDocument, copy_class,
 )
 
-@six.add_metaclass(WrapDocument)
-class SingleObjectMixin(djmod.SingleObjectMixin):
+
+class SingleObjectMixin(djmod.SingleObjectMixin, metaclass=WrapDocument):
     document = None
 
     def get_context_object_name(self, obj):
@@ -22,8 +21,6 @@ class SingleObjectMixin(djmod.SingleObjectMixin):
             return obj._meta.model_name
         else:
             return None
-
-
 
 
 class SingleObjectTemplateResponseMixin(TemplateResponseMixin):
@@ -41,7 +38,8 @@ class SingleObjectTemplateResponseMixin(TemplateResponseMixin):
         * ``<app_label>/<model_name><template_name_suffix>.html``
         """
         try:
-            names = super(SingleObjectTemplateResponseMixin, self).get_template_names()
+            names = super(SingleObjectTemplateResponseMixin,
+                          self).get_template_names()
         except ImproperlyConfigured:
             # If template_name isn't specified, it's not a problem --
             # we just start with an empty list.

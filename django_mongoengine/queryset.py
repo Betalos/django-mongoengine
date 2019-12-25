@@ -1,6 +1,5 @@
 import sys
 
-from django.utils import six
 from django.db.models.query import QuerySet as DjangoQuerySet
 
 from mongoengine.errors import NotUniqueError
@@ -52,7 +51,6 @@ class BaseQuerySet(object):
     def exists(self):
         return bool(self)
 
-
     def _clone(self):
         return self.clone()
 
@@ -81,13 +79,14 @@ class BaseQuerySet(object):
         try:
             obj = self.create(**params)
             return obj, True
-        except NotUniqueError:
+        except NotUniqueError as e:
             exc_info = sys.exc_info()
             try:
                 return self.get(**lookup), False
             except self.model.DoesNotExist:
                 pass
-            six.reraise(*exc_info)
+
+            raise e
 
 
 class QuerySet(BaseQuerySet, qs.QuerySet):

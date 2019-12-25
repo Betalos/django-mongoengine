@@ -1,5 +1,4 @@
 from django.core.exceptions import ImproperlyConfigured
-from django.utils import six
 
 from .detail import DetailView
 from .edit import WrapDocumentForm, djmod
@@ -20,7 +19,7 @@ class EmbeddedFormMixin(djmod.FormMixin):
             return self.embedded_form_class
         else:
             raise ImproperlyConfigured(
-                    "No embedded form class provided. An embedded form class must be provided.")
+                "No embedded form class provided. An embedded form class must be provided.")
 
     def get_form(self, form_class=None):
         """
@@ -86,6 +85,7 @@ class ProcessEmbeddedFormMixin(object):
     A mixin that processes an embedded form on POST.
     Does not implement any GET handling.
     """
+
     def post(self, request, *args, **kwargs):
         self.object = self.get_object()
         form_class = self.get_form_class()
@@ -103,13 +103,11 @@ class BaseEmbeddedFormMixin(EmbeddedFormMixin, ProcessEmbeddedFormMixin):
     adds the form into the template context.
     """
 
-class EmbeddedDetailView(six.with_metaclass(
-        WrapDocumentForm,
-        BaseEmbeddedFormMixin, DetailView)):
+
+class EmbeddedDetailView(BaseEmbeddedFormMixin, DetailView, metaclass=WrapDocumentForm):
     """
     Renders the detail view of a document and and adds a
     form for an embedded object into the template.
 
     See BaseEmbeddedFormMixin for details on the form.
     """
-

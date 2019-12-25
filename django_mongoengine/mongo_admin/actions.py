@@ -8,7 +8,7 @@ from django.contrib.admin import helpers
 from django.contrib.admin.utils import get_deleted_objects, model_ngettext
 from django.db import router
 from django.shortcuts import render_to_response
-from django.utils.translation import ugettext_lazy, ugettext as _
+from django.utils.translation import gettext_lazy, gettext as _
 from django.db import models
 
 from django.contrib.admin.actions import delete_selected as django_delete_selected
@@ -102,4 +102,4 @@ def _delete_selected(modeladmin, request, queryset):
         "admin/delete_selected_confirmation.html"
     ], context, context_instance=template.RequestContext(request))
 
-delete_selected.short_description = ugettext_lazy("Delete selected %(verbose_name_plural)s")
+delete_selected.short_description = gettext_lazy("Delete selected %(verbose_name_plural)s")

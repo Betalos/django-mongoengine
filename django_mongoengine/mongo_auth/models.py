@@ -1,10 +1,10 @@
 from django.utils.encoding import smart_str
-from django.utils.translation import ugettext_lazy as _
+from django.utils.translation import gettext_lazy as _
 from django.utils import timezone
 from django.conf import settings
 from django.contrib.auth.models import (
     AbstractBaseUser,
-    _user_has_perm, _user_get_all_permissions, _user_has_module_perms,
+    _user_has_perm, _user_has_module_perms,
 )
 from django.db import models
 from django.contrib.contenttypes.models import ContentTypeManager
@@ -17,6 +17,14 @@ from django_mongoengine import document
 from django_mongoengine import fields
 from django_mongoengine.queryset import QuerySetManager
 from .managers import MongoUserManager
+
+try:
+    from django.contrib.auth.models import _user_get_permissions
+
+    def _user_get_all_permissions(instance, obj):
+        return _user_get_permissions(instance, obj, 'all')
+except ImportError:
+    from django.contrib.auth.models import _user_get_all_permissions
 
 
 def ct_init(self, *args, **kwargs):
@@ -69,7 +77,7 @@ class ContentType(document.Document):
     name = fields.StringField(max_length=100)
     app_label = fields.StringField(max_length=100)
     model = fields.StringField(max_length=100, verbose_name=_('python model class name'),
-                        unique_with='app_label')
+                               unique_with='app_label')
     objects = ContentTypeManager()
 
     class Meta:
@@ -108,7 +116,8 @@ class PermissionManager(QuerySetManager):
     def get_by_natural_key(self, codename, app_label, model):
         return self.get(
             codename=codename,
-            content_type=ContentType.objects.get_by_natural_key(app_label, model)
+            content_type=ContentType.objects.get_by_natural_key(
+                app_label, model)
         )
 
 
@@ -137,8 +146,8 @@ class Permission(document.Document):
     name = fields.StringField(max_length=50, verbose_name=_('username'))
     content_type = fields.ReferenceField(ContentType)
     codename = fields.StringField(max_length=100, verbose_name=_('codename'))
-        # FIXME: don't access field of the other class
-        # unique_with=['content_type__app_label', 'content_type__model'])
+    # FIXME: don't access field of the other class
+    # unique_with=['content_type__app_label', 'content_type__model'])
 
     objects = PermissionManager()
 
@@ -176,8 +185,10 @@ class Group(document.Document):
     members-only portion of your site, or sending them members-only
     e-mail messages.
     """
-    name = fields.StringField(max_length=80, unique=True, verbose_name=_('name'))
-    permissions = fields.ListField(fields.ReferenceField(Permission, verbose_name=_('permissions')))
+    name = fields.StringField(
+        max_length=80, unique=True, verbose_name=_('name'))
+    permissions = fields.ListField(fields.ReferenceField(
+        Permission, verbose_name=_('permissions')))
 
     class Meta:
         verbose_name = _('group')
@@ -193,7 +204,8 @@ class AbstractUser(BaseUser, document.Document):
     """
     username = fields.StringField(
         max_length=150, verbose_name=_('username'),
-        help_text=_("Required. 150 characters or fewer. Letters, numbers and @/./+/-/_ characters"),
+        help_text=_(
+            "Required. 150 characters or fewer. Letters, numbers and @/./+/-/_ characters"),
     )
 
     first_name = fields.StringField(
@@ -230,8 +242,10 @@ class AbstractUser(BaseUser, document.Document):
         fields.ReferenceField(Permission), verbose_name=_('user permissions'),
         blank=True, help_text=_('Permissions for the user.'))
 
-    USERNAME_FIELD = getattr(settings, 'MONGOENGINE_USERNAME_FIELDS', 'username')
-    REQUIRED_FIELDS = getattr(settings, 'MONGOENGINE_USER_REQUIRED_FIELDS', ['email'])
+    USERNAME_FIELD = getattr(
+        settings, 'MONGOENGINE_USERNAME_FIELDS', 'username')
+    REQUIRED_FIELDS = getattr(
+        settings, 'MONGOENGINE_USER_REQUIRED_FIELDS', ['email'])
 
     meta = {
         'abstract': True,
@@ -312,7 +326,7 @@ class AbstractUser(BaseUser, document.Document):
         return permissions
 
     def get_all_permissions(self, obj=None):
-        return _user_get_all_permissions(self, obj)
+        return _user_get_permissions(self, obj, 'all')
 
     def has_perm(self, perm, obj=None):
         """
@@ -329,7 +343,7 @@ class AbstractUser(BaseUser, document.Document):
 
         # Otherwise we need to check the backends.
         return _user_has_perm(self, perm, obj)
-    
+
     def has_perms(self, perm_list, obj=None):
         """
         Returns True if the user has each of the specified permissions. If
@@ -370,16 +384,17 @@ class AbstractUser(BaseUser, document.Document):
                 app_label, model_name = settings.AUTH_PROFILE_MODULE.split('.')
             except ValueError:
                 raise SiteProfileNotAvailable('app_label and model_name should'
-                        ' be separated by a dot in the AUTH_PROFILE_MODULE set'
-                        'ting')
+                                              ' be separated by a dot in the AUTH_PROFILE_MODULE set'
+                                              'ting')
 
             try:
                 model = models.get_model(app_label, model_name)
                 if model is None:
                     raise SiteProfileNotAvailable('Unable to load the profile '
-                        'model, check AUTH_PROFILE_MODULE in your project sett'
-                        'ings')
-                self._profile_cache = model._default_manager.using(self._state.db).get(user__id__exact=self.id)
+                                                  'model, check AUTH_PROFILE_MODULE in your project sett'
+                                                  'ings')
+                self._profile_cache = model._default_manager.using(
+                    self._state.db).get(user__id__exact=self.id)
                 self._profile_cache.user = self
             except (ImportError, ImproperlyConfigured):
                 raise SiteProfileNotAvailable
